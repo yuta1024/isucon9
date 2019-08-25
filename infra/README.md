@@ -21,3 +21,9 @@ Creates following users using public keys of GitHub.
 - [yuta1024](https://github.com/yuta1024)
 - [tyabuki](https://github.com/tyabuki)
 - [nhirokinet](https://github.com/nhirokinet)
+
+### _setup_repositories
+Setup repositories of Nginx, PHP and Percona Server.
+- Nginx(mainline): http://nginx.org/en/linux_packages.html#Ubuntu
+- PHP: https://launchpad.net/~ondrej/+archive/ubuntu/php
+- Percona Server: https://www.percona.com/doc/percona-server/5.7/installation/apt_repo.html
