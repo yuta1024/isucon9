@@ -12,6 +12,19 @@ cuisine.select_hash('openssl')
 def init():
     _setup_users()
     _setup_repositories()
+    _setup_kataribe()
+
+
+def _setup_kataribe():
+    cuisine.package_ensure('wget')
+    cuisine.package_ensure('unzip')
+
+    if not cuisine.file_exists('/usr/local/bin/kataribe'):
+        run('wget https://github.com/matsuu/kataribe/releases/download/v0.3.3/linux_amd64.zip')
+        run('echo "9c4a4fe72651e33b1a6ef55f5e672fa38b755d48 linux_amd64.zip" | sha1sum -c -')
+        run('unzip linux_amd64.zip kataribe')
+        sudo('mv ./kataribe /usr/local/bin')
+        run('rm linux_amd64.zip')
 
 
 def _setup_repositories():

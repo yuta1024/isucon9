@@ -27,3 +27,6 @@ Setup repositories of Nginx, PHP and Percona Server.
 - Nginx(mainline): http://nginx.org/en/linux_packages.html#Ubuntu
 - PHP: https://launchpad.net/~ondrej/+archive/ubuntu/php
 - Percona Server: https://www.percona.com/doc/percona-server/5.7/installation/apt_repo.html
+
+### _setup_kataribe
+Installs [kataribe](https://github.com/matsuu/kataribe) to `/usr/local/bin`.
