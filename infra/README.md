@@ -7,7 +7,7 @@ Deployment scirpts for [ISUCON9](http://isucon.net/archives/53231706.html).
 
 ## Setup
 ```
-$ pip install 'fabric<2' cuisine
+$ pip install 'fabric<2' cuisine requests
 ```
 
 ## Initial Deploy
