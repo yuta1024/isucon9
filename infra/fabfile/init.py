@@ -1,15 +1,21 @@
 # -*- coding: utf-8*
 from fabric.api import *
+from notification import notice
 import cuisine
 import urllib
 
-USERS = ['yuta1024', 'tyabuki', 'nhirokinet']
 
-cuisine.select_package('apt')
-cuisine.select_hash('openssl')
-
-@task
+@task(default=True)
+@runs_once
+@notice
 def init():
+    execute(_init)
+
+
+def _init():
+    cuisine.select_package('apt')
+    cuisine.select_hash('openssl')
+
     _setup_users()
     _setup_repositories()
     _setup_kataribe()
@@ -65,7 +71,7 @@ def _setup_percona_repository():
 
 
 def _setup_users():
-    for user in USERS:
+    for user in ['yuta1024', 'tyabuki', 'nhirokinet']:
         cuisine.user_ensure(user, shell='/bin/bash', passwd='yharima', encrypted_passwd=False)
         cuisine.group_user_ensure('sudo', user)
         with cuisine.mode_sudo():
