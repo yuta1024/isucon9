@@ -10,23 +10,28 @@ Deployment scirpts for [ISUCON9](http://isucon.net/archives/53231706.html).
 $ pip install 'fabric<2' cuisine requests
 ```
 
-## Initial Deploy
-**Default sudo password is `yharima`.**
-```
-$ fab init -H '<user>@<host>'
-```
+## Tasks
+### init
+Initializes servers. **Default sudo password is `yharima`.**
 
-### _setup_users
+#### _setup_users
 Creates following users using public keys of GitHub.
 - [yuta1024](https://github.com/yuta1024)
 - [tyabuki](https://github.com/tyabuki)
 - [nhirokinet](https://github.com/nhirokinet)
 
-### _setup_repositories
+#### _setup_repositories
 Setup repositories of Nginx, PHP and Percona Server.
 - Nginx(mainline): http://nginx.org/en/linux_packages.html#Ubuntu
 - PHP: https://launchpad.net/~ondrej/+archive/ubuntu/php
 - Percona Server: https://www.percona.com/doc/percona-server/5.7/installation/apt_repo.html
 
-### _setup_kataribe
+#### _setup_kataribe
 Installs [kataribe](https://github.com/matsuu/kataribe) to `/usr/local/bin`.
+
+### setup.install_nginx_and_php
+Installs nginx and php.
+
+### setup.install_percona_server
+Installs percona-server. **Default MySQL root password is `Knishiya248!`.**  
+`knishiya` is a member of `そり`. He is a super engineer so we are respecting him!
