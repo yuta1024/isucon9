@@ -13,8 +13,11 @@ services:
       # - .:/opt/isucon/webapp/php
       # - ./static:/opt/isucon/webapp/static
   db:
-    image: percona:5.7
+    image: percona:8
     container_name: db
+    # Workaround: PHP don't support authentication method caching_sha2_password
+    # https://github.com/docker-library/mysql/issues/454
+    command: --default-authentication-plugin=mysql_native_password
     volumes:
       - ./docker/mysql-data:/var/lib/mysql
       # - ./db/isucon.sql:/docker-entrypoint-initdb.d/00-isucon.sql
