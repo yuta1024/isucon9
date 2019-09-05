@@ -71,11 +71,14 @@ def _setup_percona_repository():
 
 
 def _setup_users():
-    for user in ['yuta1024', 'tyabuki', 'nhirokinet']:
+    USERS = ['yuta1024', 'tyabuki', 'nhirokinet']
+    for user in USERS:
         cuisine.user_ensure(user, shell='/bin/bash', passwd='yharima', encrypted_passwd=False)
         cuisine.group_user_ensure('sudo', user)
         with cuisine.mode_sudo():
             cuisine.ssh_authorize(user, _get_public_key_from_github(user))
+    if not cuisine.is_ok(sudo('grep rsync /etc/sudoers && echo OK ; true')):
+        sudo('echo "%s ALL=(ALL) NOPASSWD: /usr/bin/rsync" | EDITOR="tee -a" visudo' % ','.join(USERS))
 
 
 def _get_public_key_from_github(user):
