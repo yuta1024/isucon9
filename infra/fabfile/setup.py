@@ -28,8 +28,10 @@ def install_percona_server():
 def _install_percona_server():
     cuisine.select_package('apt')
     # https://jfg-mysql.blogspot.com/2018/11/howto-install-percona-server-57-on-debian-without-root-password-prompt.html
-    sudo('debconf-set-selections <<< "percona-server-server-5.7 percona-server-server-5.7/root-pass password Knishiya248!"')
-    sudo('debconf-set-selections <<< "percona-server-server-5.7 percona-server-server-5.7/re-root-pass password Knishiya248!"')
-    sudo('apt install -y percona-server-server-5.7 percona-toolkit')
+    sudo('debconf-set-selections <<< "percona-server-server percona-server-server/root-pass password Knishiya248!"')
+    sudo('debconf-set-selections <<< "percona-server-server percona-server-server/re-root-pass password Knishiya248!"')
+    # https://geert.vanderkelen.org/2018/mysql8-unattended-dpkg/
+    sudo('debconf-set-selections <<< "percona-server-server percona-server-server/default-auth-override select Use Legacy Authentication Method (Retain MySQL 5.x Compatibility)"')
+    sudo('apt install -y percona-server-server percona-toolkit')
     sudo('systemctl enable mysql')
     sudo('systemctl start mysql')

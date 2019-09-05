@@ -68,6 +68,7 @@ def _setup_percona_repository():
         run('wget https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb')
         sudo('dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb')
         run('rm percona-release_latest.$(lsb_release -sc)_all.deb')
+        sudo('percona-release setup ps80')
 
 
 def _setup_users():
