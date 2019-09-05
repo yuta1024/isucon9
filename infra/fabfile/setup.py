@@ -14,6 +14,13 @@ def install_nginx_and_php():
 def _install_nginx_and_php():
     cuisine.select_package('apt')
     sudo('apt install -y nginx php7.3 php7.3-fpm php7.3-json php7.3-mbstring php7.3-mysql php7.3-opcache mysql-client')
+
+#     sudo('openssl dhparam -out /etc/nginx/dhparam.pem 2048')
+
+    sudo('mkdir -p /var/248')
+    sudo('chmod 777 /var/248')
+    sudo('chmod -R 777 /var/log')
+
     sudo('systemctl enable nginx php7.3-fpm')
     sudo('systemctl start nginx php7.3-fpm')
 
