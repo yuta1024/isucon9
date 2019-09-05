@@ -35,3 +35,9 @@ Installs nginx and php.
 ### setup.install_percona_server
 Installs percona-server. **Default MySQL root password is `Knishiya248!`.**  
 `knishiya` is a member of `そり`. He is a super engineer so we are respecting him!
+
+### deploy.deploy_webapp
+Deploys files and config files of a web application and restart `nginx` and `php-fpm`.
+
+### deploy.deploy_db
+Deploys config files of a database and restart `mysql`.
