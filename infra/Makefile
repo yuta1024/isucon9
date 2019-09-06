@@ -1,4 +1,4 @@
 .PHONE: all
 
 all:
-	fab -H localhost deploy_webapp
+	fab -H localhost deploy.deploy_webapp
