@@ -76,6 +76,8 @@ def _setup_users():
     for user in USERS:
         cuisine.user_ensure(user, shell='/bin/bash', passwd='yharima', encrypted_passwd=False)
         cuisine.group_user_ensure('sudo', user)
+        # https://ubuntuforums.org/showthread.php?t=1318346
+        cuisine.group_user_ensure('adm', user)
         with cuisine.mode_sudo():
             cuisine.ssh_authorize(user, _get_public_key_from_github(user))
     if not cuisine.is_ok(sudo('grep rsync /etc/sudoers && echo OK ; true')):
