@@ -64,7 +64,7 @@ def _setup_percona_repository():
     # https://www.percona.com/doc/percona-server/5.7/installation/apt_repo.html
     cuisine.package_ensure('wget')
 
-    if not cuisine.file_exists('/etc/apt/sources.list.d/percona-original-release.list'):
+    if not cuisine.file_exists('/etc/apt/sources.list.d/percona-ps-80-release.list'):
         run('wget https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb')
         sudo('dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb')
         run('rm percona-release_latest.$(lsb_release -sc)_all.deb')
