@@ -41,3 +41,9 @@ Deploys files and config files of a web application and restart `nginx` and `php
 
 ### deploy.deploy_db
 Deploys config files of a database and restart `mysql`.
+
+### log.logrotate
+Compresses logs and create new empty log files.
+
+### log.kataribe
+Collects access logs and analyzes them using kataribe.
