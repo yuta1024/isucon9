@@ -1,4 +1,5 @@
 .idea/
 *.pyc
 src/docker/mysql-data/
+infra/isucon9.pem
 infra/merged.log
