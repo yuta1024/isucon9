@@ -533,11 +533,13 @@ class Service
             if ($itemId !== 0 && $createdAt > 0) {
                 // paging
                 $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE '.
-                    '(`seller_id` = ? OR `buyer_id` = ?)  AND `id` < ? '.
+                    '(`seller_id` = ? OR `buyer_id` = ?) AND (`created_at` < ? OR (`created_at` <=? AND `id` < ?)) '.
                     'ORDER BY `created_at` DESC, `id` DESC LIMIT ?');
                 $r = $sth->execute([
                    $user['id'],
-                   $user['id'],
+		   $user['id'],
+		   (new \DateTime())->setTimeStamp((int) $createdAt)->format(self::DATETIME_SQL_FORMAT),
+		   (new \DateTime())->setTimeStamp((int) $createdAt)->format(self::DATETIME_SQL_FORMAT),
                     $itemId,
                     self::TRANSACTIONS_PER_PAGE +1,
                 ]);
@@ -626,8 +628,9 @@ class Service
 	    }
 	    $this->dbh->commit();
 
+            $promises=array();
 	    $client = new Client();
-	    for ($i=0; $i<count($itemDetails); ++$i) {
+	    for ($i=0; $i<floor(count($itemDetails) / 2); ++$i) {
 		if (array_key_exists('reserve_id_to_go', $itemDetails[$i])) {
 		    $host = $this->getShipmentServiceURL();
 		    try {
@@ -636,7 +639,40 @@ class Service
 			    'json' => ['reserve_id' => $itemDetails[$i]['reserve_id_to_go']],
 			]);
 		    } catch (RequestException $e) {
-			$this->dbh->rollBack();
+			if ($e->hasResponse()) {
+			    $this->logger->error($e->getResponse()->getReasonPhrase());
+			}
+			return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'failed to request to shipment service']);
+		    }
+		}
+	    }
+	    $responses = \GuzzleHttp\Promise\all($promises)->wait();
+	    $j = 0;
+	    for ($i=0; $i<floor(count($itemDetails) / 2); ++$i) {
+		if (array_key_exists('reserve_id_to_go', $itemDetails[$i])) {
+		    if ($responses[$j]->getStatusCode() !== StatusCode::HTTP_OK) {
+			//$this->logger->error(($responses[$i]->getReasonPhrase()));
+			return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'failed to request to shipment service']);
+		    }
+		    $shippingResponse = json_decode($responses[$j]->getBody());
+
+		    $itemDetails[$i]['shipping_status'] = $shippingResponse->status;
+
+		    unset($itemDetails[$i]['reserve_id_to_go']);
+                    ++$j;
+		}
+	    }
+
+            $promises=array();
+	    for ($i=floor(count($itemDetails)/2); $i<count($itemDetails); ++$i) {
+		if (array_key_exists('reserve_id_to_go', $itemDetails[$i])) {
+		    $host = $this->getShipmentServiceURL();
+		    try {
+			$promises[] = $client->requestAsync('GET', $host . '/status', [
+			    'headers' => ['Authorization' => self::ISUCARI_API_TOKEN, 'User-Agent' => self::HTTP_USER_AGENT],
+			    'json' => ['reserve_id' => $itemDetails[$i]['reserve_id_to_go']],
+			]);
+		    } catch (RequestException $e) {
 			if ($e->hasResponse()) {
 			    $this->logger->error($e->getResponse()->getReasonPhrase());
 			}
@@ -645,18 +681,19 @@ class Service
 		}
 	    }
             $responses = \GuzzleHttp\Promise\all($promises)->wait();
-	    for ($i=0; $i<count($itemDetails); ++$i) {
+            $j = 0;
+	    for ($i=floor(count($itemDetails)/2); $i<count($itemDetails); ++$i) {
 		if (array_key_exists('reserve_id_to_go', $itemDetails[$i])) {
-		    if ($response[$i]->getStatusCode() !== StatusCode::HTTP_OK) {
-			$this->logger->error(($responses[$i]->getReasonPhrase()));
-			$this->dbh->rollBack();
+		    if ($responses[$j]->getStatusCode() !== StatusCode::HTTP_OK) {
+			//$this->logger->error(($responses[$i]->getReasonPhrase()));
 			return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'failed to request to shipment service']);
 		    }
-		    $shippingResponse = json_decode($responses[$i]->getBody());
+		    $shippingResponse = json_decode($responses[$j]->getBody());
 
 		    $itemDetails[$i]['shipping_status'] = $shippingResponse->status;
 
 		    unset($itemDetails[$i]['reserve_id_to_go']);
+                    ++$j;
 		}
 	    }
 
