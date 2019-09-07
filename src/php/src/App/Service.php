@@ -1007,7 +1007,18 @@ class Service
                 return $response->withStatus(StatusCode::HTTP_NOT_FOUND)->withJson(['error' => 'user not found']);
             }
 
-            $sth = $this->dbh->prepare('INSERT INTO `items` (`seller_id`, `status`, `name`, `price`, `description`, `image_name`, `category_id`) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $sth = $this->dbh->prepare('UPDATE `users` SET `num_sell_items`=?, `last_bump`=? WHERE `id`=?');
+            $r = $sth->execute([
+                $seller['num_sell_items'] + 1,
+                (new \DateTime())->format(self::DATETIME_SQL_FORMAT),
+                $seller['id']
+            ]);
+            if ($r === false) {
+                throw new \PDOException($sth->errorInfo());
+	    }
+	    $this->dbh->commit();
+
+	    $sth = $this->dbh->prepare('INSERT INTO `items` (`seller_id`, `status`, `name`, `price`, `description`, `image_name`, `category_id`) VALUES (?, ?, ?, ?, ?, ?, ?)');
             $r = $sth->execute([
                 $seller['id'],
                 self::ITEM_STATUS_ON_SALE,
@@ -1022,22 +1033,12 @@ class Service
             }
             $itemId = $this->dbh->lastInsertId();
 
-            $sth = $this->dbh->prepare('UPDATE `users` SET `num_sell_items`=?, `last_bump`=? WHERE `id`=?');
-            $r = $sth->execute([
-                $seller['num_sell_items'] + 1,
-                (new \DateTime())->format(self::DATETIME_SQL_FORMAT),
-                $seller['id']
-            ]);
-            if ($r === false) {
-                throw new \PDOException($sth->errorInfo());
-            }
         } catch (\PDOException $e) {
             $this->dbh->rollBack();
             $this->logger->error($e->getMessage());
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
         }
 
-        $this->dbh->commit();
 
         return $response->withStatus(StatusCode::HTTP_OK)->withJson(['id' => (int)$itemId]);
     }
@@ -1225,7 +1226,7 @@ class Service
                 return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => '自分の商品は買えません']);
             }
 
-            $sth = $this->dbh->prepare('SELECT * FROM `users` WHERE `id` = ? FOR UPDATE');
+            $sth = $this->dbh->prepare('SELECT * FROM `users` WHERE `id` = ?');
             $r = $sth->execute([$item['seller_id']]);
             if ($r === false) {
                 throw new \PDOException($sth->errorInfo());
@@ -1814,8 +1815,6 @@ class Service
         }
 
         try {
-            $this->dbh->beginTransaction();
-
             $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `id` = ? FOR UPDATE');
             $r = $sth->execute([$payload->item_id]);
             if ($r === false) {
@@ -1832,6 +1831,7 @@ class Service
                 return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => '自分の商品以外は編集できません']);
             }
 
+            $this->dbh->beginTransaction();
             $sth = $this->dbh->prepare('SELECT * FROM `users` WHERE `id` = ? FOR UPDATE');
             $r = $sth->execute([$user['id']]);
             if ($r === false) {
@@ -1868,6 +1868,7 @@ class Service
             if ($r === false) {
                 throw new \PDOException($sth->errorInfo());
             }
+            $this->dbh->commit();
 
             $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `id` = ?');
             $r = $sth->execute([$item['id']]);
@@ -1875,8 +1876,6 @@ class Service
                 throw new \PDOException($sth->errorInfo());
             }
             $item = $sth->fetch(PDO::FETCH_ASSOC);
-
-            $this->dbh->commit();
         } catch (\PDOException $e) {
             $this->logger->error($e->getMessage());
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
