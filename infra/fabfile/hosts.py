@@ -10,5 +10,5 @@ def webapp():
 @task
 def db():
     env.hosts = [
-        '192.168.10.91'
+        '47.74.2.106'
     ]
