@@ -37,11 +37,6 @@ return function (App $app) {
         return $pdo;
     };
 
-    // session
-    $container['session'] = function ($c) {
-        return new \SlimSession\Helper;
-    };
-
     // error handler
     $container['errorHandler'] =  function (ContainerInterface $c) {
         return function (ServerRequestInterface $request, Slim\Http\Response $response, \Exception $exception) use ($c) {

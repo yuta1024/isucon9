@@ -26,11 +26,6 @@ class Service
     private $dbh;
 
     /**
-     * @var \SlimSession\Helper
-     */
-    private $session;
-
-    /**
      * @var array
      */
     private $settings;
@@ -78,7 +73,6 @@ class Service
     {
         $this->logger = $container->get('logger');
         $this->dbh = $container->get('dbh');
-        $this->session = $container->get('session');
         $this->settings = $container->get('settings');
         $this->renderer = $container->get('renderer');
     }
@@ -94,12 +88,12 @@ class Service
 
     private function getCurrentUser()
     {
-        if (! $this->session->exists('user_id')) {
+        $user_id = $_COOKIE["user_id"];
+        if ($user_id == null) {
             $this->logger->warning('no session');
             throw new \DomainException('no session');
         }
 
-        $user_id = $this->session->get('user_id');
         $sth = $this->dbh->prepare('SELECT * FROM `users` WHERE `id` = ?');
         $r = $sth->execute([$user_id]);
         if ($r === false) {
@@ -707,7 +701,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
         }
 
-        $this->session->set('user_id', $userId);
+        setcookie('user_id', $userId, time()+60*60*24*30); // 30days
 
         return $response->withJson(['id' => $userId, 'account_name' => $payload->account_name, 'address' => $payload->address]);
     }
@@ -745,7 +739,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_UNAUTHORIZED)->withJson(['error' => 'アカウント名かパスワードが間違えています']);
         }
 
-        $this->session->set('user_id', $user['id']);
+        setcookie('user_id', $user['id'], time()+60*60*24*30); // 30days
 
         return $response->withJson(
             [
