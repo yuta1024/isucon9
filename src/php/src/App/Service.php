@@ -210,8 +210,8 @@ class Service
             $this->logger->error($e->getMessage());
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
-        $db_host = getenv('MYSQL_HOST');
-        exec('MYSQL_HOST=${db_host} ' . $this->settings['app']['base_dir'] . '../sql/init.sh');
+
+        exec($this->settings['app']['base_dir'] . '../sql/init.sh');
 
         try {
             $sth = $this->dbh->prepare('INSERT INTO `configs` (`name`, `val`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `val` = VALUES(`val`)');
@@ -1099,7 +1099,8 @@ class Service
                 return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => 'qrcode not available']);
             }
 
-            if (empty($shipping['img_binary'])) {
+	    $img_binary = file_get_contents('/home/isucon/isucari/webapp/public/upload/shipping_qr_' . $transactionEvidence['id']);
+	    if(empty($img_binary)) {
                 return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'empty qrcode image']);
             }
         } catch (\PDOException $e) {
@@ -1107,7 +1108,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
         }
 
-        $response->getBody()->write($shipping['img_binary']);
+        $response->getBody()->write($img_binary);
         return $response->withHeader('Content-Type', 'image/png');
     }
 
@@ -1285,8 +1286,8 @@ class Service
 
             $sth = $this->dbh->prepare('INSERT INTO `shippings` '.
                 '(`transaction_evidence_id`, `status`, `item_name`, `item_id`, `reserve_id`, `reserve_time`, '.
-                '`to_address`, `to_name`, `from_address`, `from_name`, `img_binary`) '.
-                'VALUES (?,?,?,?,?,?,?,?,?,?,?)');
+                '`to_address`, `to_name`, `from_address`, `from_name`) '.
+                'VALUES (?,?,?,?,?,?,?,?,?,?)');
             $r = $sth->execute([
                 $transactionEvidenceId,
                 self::SHIPPING_STATUS_INITIAL,
@@ -1297,8 +1298,7 @@ class Service
                 $buyer['address'],
                 $buyer['account_name'],
                 $seller['address'],
-                $seller['account_name'],
-                "",
+                $seller['account_name']
             ]);
             if ($r === false) {
                 throw new \PDOException($sth->errorInfo());
@@ -1419,18 +1419,18 @@ class Service
                 return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'failed to request to shipment service']);
             }
 
-            $sth = $this->dbh->prepare('UPDATE `shippings` SET `status` = ?, `img_binary` = ?, `updated_at` = ? WHERE `transaction_evidence_id` = ?');
+            $sth = $this->dbh->prepare('UPDATE `shippings` SET `status` = ?, `updated_at` = ? WHERE `transaction_evidence_id` = ?');
             $r = $sth->execute([
                 self::SHIPPING_STATUS_WAIT_PICKUP,
-                $res->getBody()->getContents(),
                 (new \DateTime())->format(self::DATETIME_SQL_FORMAT),
                 $transactionEvidence['id']
-            ]);
+	    ]);
             if ($r === false) {
                 throw new \PDOException($sth->errorInfo());
             }
-
             $this->dbh->commit();
+	    file_put_contents('/home/isucon/isucari/webapp/public/upload/shipping_qr_' . $transactionEvidence['id'], $res->getBody()->getContents());
+
         } catch (\PDOException $e) {
             $this->logger->error($e->getMessage());
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
