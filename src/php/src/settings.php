@@ -23,7 +23,7 @@ return [
 
         // Database settings
         'database' => [
-            'host' => Environment::get('MYSQL_HOST', '127.0.0.1'),
+            'host' => Environment::get('MYSQL_HOST', '172.24.97.250'),
             'port' => Environment::get('MYSQL_PORT', '3306'),
             'username' => Environment::get('MYSQL_USER', 'isucari'),
             'password' => Environment::get('MYSQL_PASS', 'isucari'),
