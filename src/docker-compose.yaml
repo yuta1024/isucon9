@@ -6,12 +6,16 @@ services:
     networks:
       - isucon-network
     ports:
-      - "8080:80"
+      - "8080:443"
     volumes:
       - ./docker/conf/nginx.conf:/etc/nginx/nginx.conf
       - ./docker/conf/www.conf:/etc/php/7.3/fpm/pool.d/www.conf
-      # - .:/opt/isucon/webapp/php
-      # - ./static:/opt/isucon/webapp/static
+      - ./docker/conf/fullchain.pem:/etc/nginx/ssl/fullchain.pem
+      - ./docker/conf/privkey.pem:/etc/nginx/ssl/privkey.pem
+      - ./frontend:/home/isucon/isucari/webapp/frontend
+      - ./php:/home/isucon/isucari/webapp/php
+      - ./public:/home/isucon/isucari/webapp/public
+      - ./sql:/home/isucon/isucari/webapp/sql
   db:
     image: percona:8
     container_name: db
@@ -20,14 +24,14 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     volumes:
       - ./docker/mysql-data:/var/lib/mysql
-      # - ./db/isucon.sql:/docker-entrypoint-initdb.d/00-isucon.sql
+      - ./sql/00_create_database.sql:/docker-entrypoint-initdb.d/00-isucon.sql
     networks:
       - isucon-network
     environment:
       - MYSQL_ROOT_PASSWORD=248
-      - MYSQL_USER=isucon
-      - MYSQL_PASSWORD=isucon
-      - MYSQL_DATABASE=<REPLACE_ME>
+      - MYSQL_USER=isucari
+      - MYSQL_PASSWORD=isucari
+      - MYSQL_DATABASE=isucari
 networks:
   isucon-network:
     name: isucon-network

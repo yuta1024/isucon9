@@ -1,5 +1,9 @@
 .idea/
 *.pyc
 src/docker/mysql-data/
+src/public/upload/*.jpg
+src/public/upload/*.jpeg
+src/public/upload/*.png
+src/public/upload/*.gif
 infra/isucon9.pem
 infra/merged.log
