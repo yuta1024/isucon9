@@ -265,7 +265,7 @@ class Service
 
         return $response->withJson([
             // キャンペーン実施時には還元率の設定を返す。詳しくはマニュアルを参照のこと。
-            "campaign" => 0,
+            "campaign" => 1,
             // 実装言語を返す
             "language" => "php"
         ]);
@@ -1204,7 +1204,12 @@ class Service
         try {
             $this->dbh->beginTransaction();
 
-            $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `id` = ? FOR UPDATE NOWAIT');
+	    try {
+		$sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `id` = ? FOR UPDATE NOWAIT');
+	    } catch (\Exception $e) {
+                $this->dbh->rollBack();
+                return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => 'item is not for sale']);
+	    }
             $r = $sth->execute([$payload->item_id]);
             if ($r === false) {
                 $this->dbh->rollBack();
