@@ -1207,6 +1207,7 @@ class Service
             $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `id` = ? FOR UPDATE NOWAIT');
             $r = $sth->execute([$payload->item_id]);
             if ($r === false) {
+                $this->dbh->rollBack();
                 return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => 'item is not for sale']);
             }
             $item = $sth->fetch(PDO::FETCH_ASSOC);
