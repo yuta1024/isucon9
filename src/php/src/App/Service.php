@@ -533,13 +533,11 @@ class Service
             if ($itemId !== 0 && $createdAt > 0) {
                 // paging
                 $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE '.
-                    '(`seller_id` = ? OR `buyer_id` = ?)  AND (`created_at` < ? OR (`created_at` <=? AND `id` < ?)) '.
+                    '(`seller_id` = ? OR `buyer_id` = ?)  AND `id` < ? '.
                     'ORDER BY `created_at` DESC, `id` DESC LIMIT ?');
                 $r = $sth->execute([
                    $user['id'],
                    $user['id'],
-                    (new \DateTime())->setTimeStamp((int) $createdAt)->format(self::DATETIME_SQL_FORMAT),
-                    (new \DateTime())->setTimeStamp((int) $createdAt)->format(self::DATETIME_SQL_FORMAT),
                     $itemId,
                     self::TRANSACTIONS_PER_PAGE +1,
                 ]);
@@ -620,7 +618,7 @@ class Service
 			$detail['transaction_evidence_id'] = $transactionEvidence['id'];
 			$detail['transaction_evidence_status'] = $transactionEvidence['status'];
 
-			$detail['reserve_id_to_go'] = shipping['reserve_id'];
+			$detail['reserve_id_to_go'] = $shipping['reserve_id'];
 		    }
 		}
 
@@ -628,12 +626,12 @@ class Service
 	    }
 	    $this->dbh->commit();
 
-	    for ($i=0; $i<count($itemDetails); ++i)) {
-		if ($itemDetails[$i]['reserve_id_to_go']) {
-		    $client = new Client();
+	    $client = new Client();
+	    for ($i=0; $i<count($itemDetails); ++$i) {
+		if (array_key_exists('reserve_id_to_go', $itemDetails[$i])) {
 		    $host = $this->getShipmentServiceURL();
 		    try {
-			$r = $client->get($host . '/status', [
+			$promises[] = $client->requestAsync('GET', $host . '/status', [
 			    'headers' => ['Authorization' => self::ISUCARI_API_TOKEN, 'User-Agent' => self::HTTP_USER_AGENT],
 			    'json' => ['reserve_id' => $itemDetails[$i]['reserve_id_to_go']],
 			]);
@@ -644,15 +642,19 @@ class Service
 			}
 			return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'failed to request to shipment service']);
 		    }
-		    if ($r->getStatusCode() !== StatusCode::HTTP_OK) {
-			$this->logger->error(($r->getReasonPhrase()));
+		}
+	    }
+            $responses = \GuzzleHttp\Promise\all($promises)->wait();
+	    for ($i=0; $i<count($itemDetails); ++$i) {
+		if (array_key_exists('reserve_id_to_go', $itemDetails[$i])) {
+		    if ($response[$i]->getStatusCode() !== StatusCode::HTTP_OK) {
+			$this->logger->error(($responses[$i]->getReasonPhrase()));
 			$this->dbh->rollBack();
 			return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'failed to request to shipment service']);
 		    }
-		    $shippingResponse = json_decode($r->getBody());
+		    $shippingResponse = json_decode($responses[$i]->getBody());
 
 		    $itemDetails[$i]['shipping_status'] = $shippingResponse->status;
-
 
 		    unset($itemDetails[$i]['reserve_id_to_go']);
 		}
