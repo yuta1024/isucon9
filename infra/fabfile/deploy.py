@@ -12,24 +12,17 @@ def deploy_webapp():
 
 
 def _deploy_webapp():
-#     rsync_project(
-#         local_dir='../src/*',
-#         remote_dir='/home/isucon/torb/webapp/php',
-#         exclude=['db/', 'docker/', 'static', 'docker-compose.yaml', 'README.md'],
-#         extra_opts="--rsync-path='sudo rsync'"
-#     )
-#
-#     rsync_project(
-#         local_dir='../src/static',
-#         remote_dir='/home/isucon/torb/webapp',
-#         extra_opts="--rsync-path='sudo rsync'"
-#     )
-#
-#     rsync_project(
-#         local_dir='../src/db',
-#         remote_dir='/home/isucon/torb',
-#         extra_opts="--rsync-path='sudo rsync'"
-#     )
+    rsync_project(
+        local_dir='../src/php/src/*',
+        remote_dir='/home/isucon/isucari/webapp/php/src',
+        extra_opts="--rsync-path='sudo rsync'"
+    )
+
+    rsync_project(
+        local_dir='../src/sql/*',
+        remote_dir='/home/isucon/isucari/webapp/sql',
+        extra_opts="--rsync-path='sudo rsync'"
+    )
 
     rsync_project(
         local_dir='./etc/php/7.3/fpm/',

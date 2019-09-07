@@ -4,8 +4,7 @@ from fabric.api import *
 @task
 def webapp():
     env.hosts = [
-        '192.168.10.90',
-        '192.168.10.92',
+        '47.91.22.47'
     ]
 
 @task
