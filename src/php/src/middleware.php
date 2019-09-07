@@ -5,13 +5,6 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 return function (App $app) {
-    // session
-    $app->add(
-        new \Slim\Middleware\Session([
-            'name' => 'session-isucari',
-        ])
-    );
-
     // logging
 //  $app->add(function (Request $request, Response $response, callable $next) {
 //      $route = $request->getAttribute('route');

@@ -30,16 +30,12 @@ return function (App $app) {
         $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s', $settings['host'], $settings['port'], $settings['dbname']);
         $options = [
             PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+            PDO::ATTR_PERSISTENT => true,
         ];
         $pdo = new \PDO($dsn, $settings['username'], $settings['password'], $options);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         return $pdo;
-    };
-
-    // session
-    $container['session'] = function ($c) {
-        return new \SlimSession\Helper;
     };
 
     // error handler

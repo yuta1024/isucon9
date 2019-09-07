@@ -26,11 +26,6 @@ class Service
     private $dbh;
 
     /**
-     * @var \SlimSession\Helper
-     */
-    private $session;
-
-    /**
      * @var array
      */
     private $settings;
@@ -78,7 +73,6 @@ class Service
     {
         $this->logger = $container->get('logger');
         $this->dbh = $container->get('dbh');
-        $this->session = $container->get('session');
         $this->settings = $container->get('settings');
         $this->renderer = $container->get('renderer');
     }
@@ -94,12 +88,12 @@ class Service
 
     private function getCurrentUser()
     {
-        if (! $this->session->exists('user_id')) {
+        $user_id = $_COOKIE["user_id"];
+        if ($user_id == null) {
             $this->logger->warning('no session');
             throw new \DomainException('no session');
         }
 
-        $user_id = $this->session->get('user_id');
         $sth = $this->dbh->prepare('SELECT * FROM `users` WHERE `id` = ?');
         $r = $sth->execute([$user_id]);
         if ($r === false) {
@@ -127,7 +121,7 @@ class Service
             return false;
         }
         return [
-          'id' => $user['id'],
+            'id' => $user['id'],
             'account_name' => $user['account_name'],
             'num_sell_items' => $user['num_sell_items'],
         ];
@@ -144,22 +138,61 @@ class Service
         return $user;
     }
 
+    private $cat = [
+        1 => ['id' => 1, 'parent_id' => 0, 'category_name' => "ソファー"],
+        2 => ['id' => 2, 'parent_id' => 1, 'category_name' => "一人掛けソファー"],
+        3 => ['id' => 3, 'parent_id' => 1, 'category_name' => "二人掛けソファー"],
+        4 => ['id' => 4, 'parent_id' => 1, 'category_name' => "コーナーソファー"],
+        5 => ['id' => 5, 'parent_id' => 1, 'category_name' => "二段ソファー"],
+        6 => ['id' => 6, 'parent_id' => 1, 'category_name' => "ソファーベッド"],
+        10 => ['id' => 10, 'parent_id' => 0, 'category_name' => "家庭用チェア"],
+        11 => ['id' => 11, 'parent_id' => 10, 'category_name' => "スツール"],
+        12 => ['id' => 12, 'parent_id' => 10, 'category_name' => "クッションスツール"],
+        13 => ['id' => 13, 'parent_id' => 10, 'category_name' => "ダイニングチェア"],
+        14 => ['id' => 14, 'parent_id' => 10, 'category_name' => "リビングチェア"],
+        15 => ['id' => 15, 'parent_id' => 10, 'category_name' => "カウンターチェア"],
+        20 => ['id' => 20, 'parent_id' => 0, 'category_name' => "キッズチェア"],
+        21 => ['id' => 21, 'parent_id' => 20, 'category_name' => "学習チェア"],
+        22 => ['id' => 22, 'parent_id' => 20, 'category_name' => "ベビーソファ"],
+        23 => ['id' => 23, 'parent_id' => 20, 'category_name' => "キッズハイチェア"],
+        24 => ['id' => 24, 'parent_id' => 20, 'category_name' => "テーブルチェア"],
+        30 => ['id' => 30, 'parent_id' => 0, 'category_name' => "オフィスチェア"],
+        31 => ['id' => 31, 'parent_id' => 30, 'category_name' => "デスクチェア"],
+        32 => ['id' => 32, 'parent_id' => 30, 'category_name' => "ビジネスチェア"],
+        33 => ['id' => 33, 'parent_id' => 30, 'category_name' => "回転チェア"],
+        34 => ['id' => 34, 'parent_id' => 30, 'category_name' => "リクライニングチェア"],
+        35 => ['id' => 35, 'parent_id' => 30, 'category_name' => "投擲用椅子"],
+        40 => ['id' => 40, 'parent_id' => 0, 'category_name' => "折りたたみ椅子"],
+        41 => ['id' => 41, 'parent_id' => 40, 'category_name' => "パイプ椅子"],
+        42 => ['id' => 42, 'parent_id' => 40, 'category_name' => "木製折りたたみ椅子"],
+        43 => ['id' => 43, 'parent_id' => 40, 'category_name' => "キッチンチェア"],
+        44 => ['id' => 44, 'parent_id' => 40, 'category_name' => "アウトドアチェア"],
+        45 => ['id' => 45, 'parent_id' => 40, 'category_name' => "作業椅子"],
+        50 => ['id' => 50, 'parent_id' => 0, 'category_name' => "ベンチ"],
+        51 => ['id' => 51, 'parent_id' => 50, 'category_name' => "一人掛けベンチ"],
+        52 => ['id' => 52, 'parent_id' => 50, 'category_name' => "二人掛けベンチ"],
+        53 => ['id' => 53, 'parent_id' => 50, 'category_name' => "アウトドア用ベンチ"],
+        54 => ['id' => 54, 'parent_id' => 50, 'category_name' => "収納付きベンチ"],
+        55 => ['id' => 55, 'parent_id' => 50, 'category_name' => "背もたれ付きベンチ"],
+        56 => ['id' => 56, 'parent_id' => 50, 'category_name' => "ベンチマーク"],
+        60 => ['id' => 60, 'parent_id' => 0, 'category_name' => "座椅子"],
+        61 => ['id' => 61, 'parent_id' => 60, 'category_name' => "和風座椅子"],
+        62 => ['id' => 62, 'parent_id' => 60, 'category_name' => "高座椅子"],
+        63 => ['id' => 63, 'parent_id' => 60, 'category_name' => "ゲーミング座椅子"],
+        64 => ['id' => 64, 'parent_id' => 60, 'category_name' => "ロッキングチェア"],
+        65 => ['id' => 65, 'parent_id' => 60, 'category_name' => "座布団"],
+        66 => ['id' => 66, 'parent_id' => 60, 'category_name' => "空気椅子"],
+    ];
+
     private function getCategoryByID($id)
     {
-        $sth = $this->dbh->prepare('SELECT * FROM `categories` WHERE `id` = ?');
-        $r = $sth->execute([$id]);
-        if ($r === false) {
-            throw new \PDOException($sth->errorInfo());
-        }
-        $category = $sth->fetch(PDO::FETCH_ASSOC);
-        if ($category === false) {
+        if (!isset($this->cat[$id])) {
             return false;
         }
-        if ((int) $category['parent_id'] !== 0) {
-            $parent = $this->getCategoryByID($category['parent_id']);
-            if ($parent === false) {
-                return false;
-            }
+
+        $category = $this->cat[$id];
+        if ((int)$category['parent_id'] !== 0) {
+            $parent = $this->cat[$category['parent_id']];
             $category['parent_category_name'] = $parent['category_name'];
         }
         return $category;
@@ -246,12 +279,12 @@ class Service
     public function new_items(Request $request, Response $response, array $args)
     {
         $itemId = $request->getParam('item_id', "");
-        $createdAt = (int) $request->getParam('created_at', 0);
+        $createdAt = (int)$request->getParam('created_at', 0);
 
         try {
             if ($itemId !== "" && $createdAt > 0) {
                 // paging
-                $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `status` IN (?,?) AND (`created_at` < ? OR (`created_at` <=? AND `id` < ?)) '.
+                $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `status` IN (?,?) AND (`created_at` < ? OR (`created_at` <=? AND `id` < ?)) ' .
                     'ORDER BY `created_at` DESC, `id` DESC LIMIT ?');
                 $r = $sth->execute([
                     self::ITEM_STATUS_ON_SALE,
@@ -290,16 +323,16 @@ class Service
                     return $response->withStatus(StatusCode::HTTP_NOT_FOUND)->withJson(['error' => 'category not found']);
                 }
                 $itemSimples[] = [
-                  'id' => (int) $item['id'],
-                  'seller_id' => (int) $item['seller_id'],
-                  'seller' => $seller,
-                  'status' => $item['status'],
-                  'name' => $item['name'],
-                  'price' => (int) $item['price'],
-                  'image_url' => $this->getImageUrl($item['image_name']),
-                  'category_id' => (int) $item['category_id'],
-                  'category' => $category,
-                  'created_at' => (new \DateTime($item['created_at']))->getTimestamp(),
+                    'id' => (int)$item['id'],
+                    'seller_id' => (int)$item['seller_id'],
+                    'seller' => $seller,
+                    'status' => $item['status'],
+                    'name' => $item['name'],
+                    'price' => (int)$item['price'],
+                    'image_url' => $this->getImageUrl($item['image_name']),
+                    'category_id' => (int)$item['category_id'],
+                    'category' => $category,
+                    'created_at' => (new \DateTime($item['created_at']))->getTimestamp(),
                 ];
             }
 
@@ -320,37 +353,38 @@ class Service
         );
     }
 
+    private $cat_p = [
+        0 => [1, 10, 20, 30, 40, 50, 60],
+        1 => [2, 3, 4, 5, 6],
+        10 => [11, 12, 13, 14, 15],
+        20 => [21, 22, 23, 24],
+        30 => [31, 32, 33, 34, 35],
+        40 => [41, 42, 43, 44, 45],
+        50 => [51, 52, 53, 54, 55, 56],
+        60 => [61, 62, 63, 64, 65, 66],
+    ];
+
     public function new_category_items(Request $request, Response $response, array $args)
     {
         $rootCategoryId = $args['id'] ?? 0;
-        if ((int) $rootCategoryId === 0) {
+        if ((int)$rootCategoryId === 0) {
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'incorrect category id']);
         }
 
         $rootCategory = $this->getCategoryByID($rootCategoryId);
-        if ($rootCategory === false || (int) $rootCategory['parent_id'] !== 0) {
+        if ($rootCategory === false || (int)$rootCategory['parent_id'] !== 0) {
             return $response->withStatus(StatusCode::HTTP_NOT_FOUND)->withJson('category not found');
         }
 
         try {
-            $sth = $this->dbh->prepare('SELECT id FROM `categories` WHERE parent_id=?');
-            $r = $sth->execute([$rootCategoryId]);
-            if ($r === false) {
-                throw new \PDOException($sth->errorInfo());
-            }
-            $result = $sth->fetchAll(PDO::FETCH_ASSOC);
-            $categoryIds = [];
-            foreach ($result as $r) {
-                $categoryIds[] = $r['id'];
-            }
-
+            $categoryIds = $this->cat_p[$rootCategoryId];
             $itemId = $request->getParam('item_id');
-            $createdAt = (int) $request->getParam('created_at', 0);
+            $createdAt = (int)$request->getParam('created_at', 0);
 
             if (!empty($itemId) && $createdAt > 0) {
                 // paging
                 $in = str_repeat('?,', count($categoryIds) - 1) . '?';
-                $sth = $this->dbh->prepare("SELECT * FROM `items` WHERE `status` IN (?,?) AND category_id IN (${in}) AND (`created_at` < ? OR (`created_at` <= ? AND `id` < ?)) ".
+                $sth = $this->dbh->prepare("SELECT * FROM `items` WHERE `status` IN (?,?) AND category_id IN (${in}) AND (`created_at` < ? OR (`created_at` <= ? AND `id` < ?)) " .
                     "ORDER BY `created_at` DESC, `id` DESC LIMIT ?");
                 $r = $sth->execute(array_merge(
                     [self::ITEM_STATUS_ON_SALE, self::ITEM_STATUS_SOLD_OUT],
@@ -417,7 +451,7 @@ class Service
 
         return $response->withStatus(StatusCode::HTTP_OK)->withJson(
             [
-                'root_category_id' => (int) $rootCategory['id'],
+                'root_category_id' => (int)$rootCategory['id'],
                 'root_category_name' => $rootCategory['category_name'],
                 'items' => $itemSimples,
                 'has_next' => $hasNext
@@ -435,12 +469,12 @@ class Service
         }
 
         $itemId = $request->getParam('item_id');
-        $createdAt = (int) $request->getParam('created_at', 0);
+        $createdAt = (int)$request->getParam('created_at', 0);
         try {
             if ($itemId !== "" && $createdAt > 0) {
                 // paging
                 $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `seller_id` = ? AND `status` IN (?,?,?) AND (`created_at` < ? OR (`created_at` <= ? AND `id` < ?)) ' .
-                            'ORDER BY `created_at` DESC, `id` DESC LIMIT ?');
+                    'ORDER BY `created_at` DESC, `id` DESC LIMIT ?');
                 $r = $sth->execute([
                     $user['id'],
                     self::ITEM_STATUS_ON_SALE,
@@ -524,8 +558,8 @@ class Service
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
         }
 
-        $itemId = (int) $request->getParam('item_id', 0);
-        $createdAt = (int) $request->getParam('created_at', 0);
+        $itemId = (int)$request->getParam('item_id', 0);
+        $createdAt = (int)$request->getParam('created_at', 0);
 
         try {
             $this->dbh->beginTransaction();
@@ -541,7 +575,7 @@ class Service
 		   (new \DateTime())->setTimeStamp((int) $createdAt)->format(self::DATETIME_SQL_FORMAT),
 		   (new \DateTime())->setTimeStamp((int) $createdAt)->format(self::DATETIME_SQL_FORMAT),
                     $itemId,
-                    self::TRANSACTIONS_PER_PAGE +1,
+                    self::TRANSACTIONS_PER_PAGE + 1,
                 ]);
                 if ($r === false) {
                     throw new \PDOException($sth->errorInfo());
@@ -575,26 +609,26 @@ class Service
                     return $response->withStatus(StatusCode::HTTP_NOT_FOUND)->withJson(['error' => 'seller not found']);
                 }
                 $detail = [
-                        'id' => (int) $item['id'],
-                        'seller_id' => (int) $item['seller_id'],
-                        'seller' => $seller,
-                        'status' => $item['status'],
-                        'name' => $item['name'],
-                        'price' => (int) $item['price'],
-                        'description' => $item['description'],
-                        'image_url' => $this->getImageUrl($item['image_name']),
-                        'category_id' => (int) $item['category_id'],
-                        'category' => $category,
-                        'created_at' => (new \DateTime($item['created_at']))->getTimestamp(),
-                    ];
+                    'id' => (int)$item['id'],
+                    'seller_id' => (int)$item['seller_id'],
+                    'seller' => $seller,
+                    'status' => $item['status'],
+                    'name' => $item['name'],
+                    'price' => (int)$item['price'],
+                    'description' => $item['description'],
+                    'image_url' => $this->getImageUrl($item['image_name']),
+                    'category_id' => (int)$item['category_id'],
+                    'category' => $category,
+                    'created_at' => (new \DateTime($item['created_at']))->getTimestamp(),
+                ];
 
-                if ((int) $item['buyer_id'] !== 0) {
+                if ((int)$item['buyer_id'] !== 0) {
                     $buyer = $this->getUserSimpleByID($item['buyer_id']);
                     if ($buyer === false) {
                         $this->dbh->rollBack();
                         return $response->withStatus(StatusCode::HTTP_NOT_FOUND)->withJson(['error' => 'buyer not found']);
                     }
-                    $detail['buyer_id'] = (int) $item['buyer_id'];
+                    $detail['buyer_id'] = (int)$item['buyer_id'];
                     $detail['buyer'] = $buyer;
                 }
 
@@ -744,9 +778,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
         }
 
-        $this->session->set('user_id', $userId);
-        $bytes = random_bytes(20);
-        $this->session->set('csrf_token', bin2hex($bytes));
+        setcookie('user_id', $userId, time() + 60 * 60 * 24 * 30); // 30days
 
         return $response->withJson(['id' => $userId, 'account_name' => $payload->account_name, 'address' => $payload->address]);
     }
@@ -780,13 +812,11 @@ class Service
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
         }
 
-        if (! password_verify($payload->password, $user['hashed_password'])) {
+        if (!password_verify($payload->password, $user['hashed_password'])) {
             return $response->withStatus(StatusCode::HTTP_UNAUTHORIZED)->withJson(['error' => 'アカウント名かパスワードが間違えています']);
         }
 
-        $this->session->set('user_id', $user['id']);
-        $bytes = random_bytes(20);
-        $this->session->set('csrf_token', bin2hex($bytes));
+        setcookie('user_id', $user['id'], time() + 60 * 60 * 24 * 30); // 30days
 
         return $response->withJson(
             [
@@ -801,7 +831,7 @@ class Service
     public function settings(Request $request, Response $response, array $args)
     {
         $output = [];
-        $output['csrf_token'] = $this->session->get('csrf_token', '');
+        $output['csrf_token'] = '0';
 
         try {
             $user = $this->getCurrentUser();
@@ -811,13 +841,13 @@ class Service
             // pass
         }
 
-        $sth = $this->dbh->query('SELECT * FROM `categories`', PDO::FETCH_ASSOC);
-        $sth->execute();
-        $categories = $sth->fetchAll();
-        if ($categories === false) {
-            return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
-        }
-        $output['categories'] = $categories;
+//        $sth = $this->dbh->query('SELECT * FROM `categories`', PDO::FETCH_ASSOC);
+//        $sth->execute();
+//        $categories = $sth->fetchAll();
+//        if ($categories === false) {
+//            return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
+//        }
+        $output['categories'] = array_values($this->cat);
         $output['payment_service_url'] = $this->getPaymentServiceURL();
 
         return $response->withStatus(StatusCode::HTTP_OK)->withJson($output);
@@ -862,7 +892,7 @@ class Service
 
             $item['seller'] = $this->simplifyUser($seller);
 
-            if (($user['id'] === $item['seller']['id'] || $user['id'] === $item['buyer_id']) && (int) $item['buyer_id'] !== 0) {
+            if (($user['id'] === $item['seller']['id'] || $user['id'] === $item['buyer_id']) && (int)$item['buyer_id'] !== 0) {
                 $sth = $this->dbh->prepare('SELECT * FROM `users` WHERE `id` = ?');
                 $r = $sth->execute([$item['buyer_id']]);
                 if ($r === false) {
@@ -911,12 +941,12 @@ class Service
         $csrf_token = $request->getParam('csrf_token', '');
         $name = $request->getParam('name', '');
         $description = $request->getParam('description', '');
-        $price = (int) $request->getParam('price', 0);
-        $category_id = (int) $request->getParam('category_id', 0);
+        $price = (int)$request->getParam('price', 0);
+        $category_id = (int)$request->getParam('category_id', 0);
         /** @var UploadedFileInterface[] $files */
         $files = $request->getUploadedFiles();
 
-        if ($csrf_token !== $this->session->get('csrf_token')) {
+        if ($csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -933,12 +963,12 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'Incorrect category ID']);
         }
 
-        if (! array_key_exists('image', $files)) {
+        if (!array_key_exists('image', $files)) {
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'image error']);
         }
         $image = $files['image'];
         $ext = pathinfo($image->getClientFilename(), PATHINFO_EXTENSION);
-        if (! in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'unsupported image format error']);
         }
         if ($ext === 'jpeg') {
@@ -994,7 +1024,7 @@ class Service
 
             $sth = $this->dbh->prepare('UPDATE `users` SET `num_sell_items`=?, `last_bump`=? WHERE `id`=?');
             $r = $sth->execute([
-                $seller['num_sell_items']+1,
+                $seller['num_sell_items'] + 1,
                 (new \DateTime())->format(self::DATETIME_SQL_FORMAT),
                 $seller['id']
             ]);
@@ -1009,7 +1039,7 @@ class Service
 
         $this->dbh->commit();
 
-        return $response->withStatus(StatusCode::HTTP_OK)->withJson(['id' => (int) $itemId]);
+        return $response->withStatus(StatusCode::HTTP_OK)->withJson(['id' => (int)$itemId]);
     }
 
     public function edit(Request $request, Response $response, array $args)
@@ -1021,7 +1051,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1088,8 +1118,8 @@ class Service
         }
 
         return $response->withStatus(StatusCode::HTTP_OK)->withJson([
-            'item_id' => (int) $item['id'],
-            'item_price' => (int) $item['price'],
+            'item_id' => (int)$item['id'],
+            'item_price' => (int)$item['price'],
             'item_created_at' => (new \DateTime($item['created_at']))->getTimestamp(),
             'item_updated_at' => (new \DateTime($item['updated_at']))->getTImestamp(),
         ]);
@@ -1097,7 +1127,7 @@ class Service
 
     public function qrcode(Request $request, Response $response, array $args)
     {
-        $transactionEvidenceId = (int) $args['id'];
+        $transactionEvidenceId = (int)$args['id'];
         try {
             $seller = $this->getCurrentUser();
         } catch (\DomainException $e) {
@@ -1136,8 +1166,8 @@ class Service
                 return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => 'qrcode not available']);
             }
 
-	    $img_binary = file_get_contents('/home/isucon/isucari/webapp/public/upload/shipping_qr_' . $transactionEvidence['id']);
-	    if(empty($img_binary)) {
+            $img_binary = file_get_contents('/home/isucon/isucari/webapp/public/upload/shipping_qr_' . $transactionEvidence['id']);
+            if (empty($img_binary)) {
                 return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'empty qrcode image']);
             }
         } catch (\PDOException $e) {
@@ -1158,7 +1188,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1211,10 +1241,10 @@ class Service
                 return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'category id error']);
             }
 
-            $sth = $this->dbh->prepare('INSERT INTO `transaction_evidences` '.
-                '(`seller_id`, `buyer_id`, `status`, '.
-                '`item_id`, `item_name`, `item_price`, `item_description`, '.
-                '`item_category_id`, `item_root_category_id`) '.
+            $sth = $this->dbh->prepare('INSERT INTO `transaction_evidences` ' .
+                '(`seller_id`, `buyer_id`, `status`, ' .
+                '`item_id`, `item_name`, `item_price`, `item_description`, ' .
+                '`item_category_id`, `item_root_category_id`) ' .
                 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
             $r = $sth->execute([
                 $item['seller_id'],
@@ -1278,12 +1308,12 @@ class Service
                     $host . '/token',
                     [
                         'json' => [
-                        'shop_id' => self::PAYMENT_SERVICE_ISUCARI_SHOP_ID,
-                        'api_key' => self::PAYMENT_SERVICE_ISUCARI_API_KEY,
-                        'token' => $payload->token,
-                        'price' => $item['price'],
-                    ],
-                    'headers' => ['User-Agent' => self::HTTP_USER_AGENT],]
+                            'shop_id' => self::PAYMENT_SERVICE_ISUCARI_SHOP_ID,
+                            'api_key' => self::PAYMENT_SERVICE_ISUCARI_API_KEY,
+                            'token' => $payload->token,
+                            'price' => $item['price'],
+                        ],
+                        'headers' => ['User-Agent' => self::HTTP_USER_AGENT],]
                 );
             } catch (RequestException $e) {
                 $this->dbh->rollBack();
@@ -1321,9 +1351,9 @@ class Service
                 return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => '想定外のエラー']);
             }
 
-            $sth = $this->dbh->prepare('INSERT INTO `shippings` '.
-                '(`transaction_evidence_id`, `status`, `item_name`, `item_id`, `reserve_id`, `reserve_time`, '.
-                '`to_address`, `to_name`, `from_address`, `from_name`) '.
+            $sth = $this->dbh->prepare('INSERT INTO `shippings` ' .
+                '(`transaction_evidence_id`, `status`, `item_name`, `item_id`, `reserve_id`, `reserve_time`, ' .
+                '`to_address`, `to_name`, `from_address`, `from_name`) ' .
                 'VALUES (?,?,?,?,?,?,?,?,?,?)');
             $r = $sth->execute([
                 $transactionEvidenceId,
@@ -1348,7 +1378,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
         }
 
-        return $response->withStatus(StatusCode::HTTP_OK)->withJson(['transaction_evidence_id' => (int) $transactionEvidenceId]);
+        return $response->withStatus(StatusCode::HTTP_OK)->withJson(['transaction_evidence_id' => (int)$transactionEvidenceId]);
     }
 
     public function ship(Request $request, Response $response, array $args)
@@ -1360,7 +1390,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1461,12 +1491,12 @@ class Service
                 self::SHIPPING_STATUS_WAIT_PICKUP,
                 (new \DateTime())->format(self::DATETIME_SQL_FORMAT),
                 $transactionEvidence['id']
-	    ]);
+            ]);
             if ($r === false) {
                 throw new \PDOException($sth->errorInfo());
             }
             $this->dbh->commit();
-	    file_put_contents('/home/isucon/isucari/webapp/public/upload/shipping_qr_' . $transactionEvidence['id'], $res->getBody()->getContents());
+            file_put_contents('/home/isucon/isucari/webapp/public/upload/shipping_qr_' . $transactionEvidence['id'], $res->getBody()->getContents());
 
         } catch (\PDOException $e) {
             $this->logger->error($e->getMessage());
@@ -1474,8 +1504,8 @@ class Service
         }
 
         return $response->withStatus(StatusCode::HTTP_OK)->withJson([
-            'path' => sprintf("/transactions/%d.png", (int) $transactionEvidence['id']),
-            'reserve_id' => (string) $shipping['reserve_id'],
+            'path' => sprintf("/transactions/%d.png", (int)$transactionEvidence['id']),
+            'reserve_id' => (string)$shipping['reserve_id'],
         ]);
     }
 
@@ -1488,7 +1518,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1581,7 +1611,7 @@ class Service
                 return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'failed to request to shipment service']);
             }
             $shippingResponse = json_decode($r->getBody());
-            if (! ($shippingResponse->status === self::SHIPPING_STATUS_DONE || $shippingResponse->status === self::SHIPPING_STATUS_SHIPPING)) {
+            if (!($shippingResponse->status === self::SHIPPING_STATUS_DONE || $shippingResponse->status === self::SHIPPING_STATUS_SHIPPING)) {
                 $this->dbh->rollBack();
                 return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => 'shipment service側で配送中か配送完了になっていません']);
             }
@@ -1612,7 +1642,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
         }
 
-        return $response->withStatus(StatusCode::HTTP_OK)->withJson(['transaction_evidence_id' => (int) $transactionEvidence['id']]);
+        return $response->withStatus(StatusCode::HTTP_OK)->withJson(['transaction_evidence_id' => (int)$transactionEvidence['id']]);
     }
 
     public function complete(Request $request, Response $response, array $args)
@@ -1624,7 +1654,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1758,7 +1788,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_INTERNAL_SERVER_ERROR)->withJson(['error' => 'db error']);
         }
 
-        return $response->withStatus(StatusCode::HTTP_OK)->withJson(['transaction_evidence_id' => (int) $transactionEvidence['id']]);
+        return $response->withStatus(StatusCode::HTTP_OK)->withJson(['transaction_evidence_id' => (int)$transactionEvidence['id']]);
     }
 
     public function bump(Request $request, Response $response, array $args)
@@ -1770,7 +1800,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1853,8 +1883,8 @@ class Service
         }
 
         return $response->withStatus(StatusCode::HTTP_OK)->withJson([
-            'item_id' => (int) $item['id'],
-            'item_price' => (int) $item['price'],
+            'item_id' => (int)$item['id'],
+            'item_price' => (int)$item['price'],
             'item_created_at' => (new \DateTime($item['created_at']))->getTimestamp(),
             'item_updated_at' => (new \DateTime($item['updated_at']))->getTimestamp(),
         ]);
