@@ -12,6 +12,8 @@ def deploy_webapp():
 
 
 def _deploy_webapp():
+    sudo('mkdir -p /home/isucon/torb/webapp/php')
+
     rsync_project(
         local_dir='../src/*',
         remote_dir='/home/isucon/torb/webapp/php',
@@ -31,9 +33,24 @@ def _deploy_webapp():
         extra_opts="--rsync-path='sudo rsync'"
     )
 
-    # TODO: deploy config files for nginx and php
+    rsync_project(
+        local_dir='./etc/php/7.3/fpm/',
+        remote_dir='/etc/php/7.3/fpm',
+        extra_opts="--rsync-path='sudo rsync'"
+    )
 
-    sudo('systemctl restart nginx php7.3-fpm')
+    rsync_project(
+        local_dir='./etc/nginx/',
+        remote_dir='/etc/nginx',
+        extra_opts="--rsync-path='sudo rsync'"
+    )
+
+    # 頭の悪いなにか
+    sudo('chmod -R 777 /var/log')
+
+    # 先のsock生えてないとnginx起動できないのでこの順番で
+    sudo('systemctl restart php7.3-fpm')
+    sudo('systemctl restart nginx')
 
 
 @task
@@ -44,6 +61,10 @@ def deploy_db():
 
 
 def _deploy_db():
-    # TODO: deploy config files for percona-server
+    rsync_project(
+        local_dir='./etc/mysql/my.cnf',
+        remote_dir='/etc/mysql/my.cnf',
+        extra_opts="--rsync-path='sudo rsync'"
+    )
 
     sudo('systemctl restart mysql')
