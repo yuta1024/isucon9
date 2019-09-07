@@ -42,37 +42,4 @@ return function (App $app) {
     $app->get('/transactions/{id}', \App\Service::class . ':index');
     $app->get('/users/{id:\d+}', \App\Service::class . ':index');
     $app->get('/users/setting', \App\Service::class . ':index');
-
-
-    // to serve as a static file, for anything else
-    $app->get('/{name:.+}', function (Request $request, Response $response, array $args) use ($container) {
-        // static
-        $template = $container->get('renderer')->getTemplatePath();
-        $path = $template . $args['name'];
-
-        if (! is_readable($path)) {
-            return $response->withStatus(StatusCode::HTTP_NOT_FOUND);
-        }
-
-        // find webapp/public -type d -name '.git' -prune -o -type f -exec basename {} \; | grep -o '\.[^.]*$' | sort | uniq | grep -v git
-        $content_type_map = [
-            'css' => 'text/css',
-            'html' => 'text/html',
-            'ico' => 'image/x-icon',
-            'png' => 'image/png',
-            'js' => 'application/javascript',
-            'json' => 'application/json ',
-            'map' => 'application/json ', // source map, main.js.map
-        ];
-
-        $ext = pathinfo($path, PATHINFO_EXTENSION);
-        if (array_key_exists($ext, $content_type_map)) {
-            $mimeType = $content_type_map[$ext];
-        } else {
-            $mimeType = 'application/octet-stream';
-        }
-
-        $response->getBody()->write(file_get_contents($path));
-        return $response->withHeader('Content-Type', $mimeType);
-    })->setName('static');
 };
