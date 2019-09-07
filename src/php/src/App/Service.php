@@ -708,8 +708,6 @@ class Service
         }
 
         $this->session->set('user_id', $userId);
-        $bytes = random_bytes(20);
-        $this->session->set('csrf_token', bin2hex($bytes));
 
         return $response->withJson(['id' => $userId, 'account_name' => $payload->account_name, 'address' => $payload->address]);
     }
@@ -748,8 +746,6 @@ class Service
         }
 
         $this->session->set('user_id', $user['id']);
-        $bytes = random_bytes(20);
-        $this->session->set('csrf_token', bin2hex($bytes));
 
         return $response->withJson(
             [
@@ -764,7 +760,7 @@ class Service
     public function settings(Request $request, Response $response, array $args)
     {
         $output = [];
-        $output['csrf_token'] = $this->session->get('csrf_token', '');
+        $output['csrf_token'] = '0';
 
         try {
             $user = $this->getCurrentUser();
@@ -879,7 +875,7 @@ class Service
         /** @var UploadedFileInterface[] $files */
         $files = $request->getUploadedFiles();
 
-        if ($csrf_token !== $this->session->get('csrf_token')) {
+        if ($csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -984,7 +980,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1121,7 +1117,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1323,7 +1319,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1451,7 +1447,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1587,7 +1583,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
@@ -1733,7 +1729,7 @@ class Service
             return $response->withStatus(StatusCode::HTTP_BAD_REQUEST)->withJson(['error' => 'json decode error']);
         }
 
-        if ($payload->csrf_token !== $this->session->get('csrf_token')) {
+        if ($payload->csrf_token !== '0') {
             return $response->withStatus(StatusCode::HTTP_UNPROCESSABLE_ENTITY)->withJson(['error' => 'csrf token error']);
         }
 
