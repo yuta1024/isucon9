@@ -265,7 +265,7 @@ class Service
 
         return $response->withJson([
             // キャンペーン実施時には還元率の設定を返す。詳しくはマニュアルを参照のこと。
-            "campaign" => 1,
+            "campaign" => 0,
             // 実装言語を返す
             "language" => "php"
         ]);
@@ -1202,30 +1202,12 @@ class Service
         }
 
         try {
-            $sth = $this->dbh->prepare('SELECT status, seller_id FROM `items` WHERE `id` = ?');
-            $r = $sth->execute([$payload->item_id]);
-            if ($r === false) {
-                throw new \PDOException($sth->errorInfo());
-            }
-            $item = $sth->fetch(PDO::FETCH_ASSOC);
-            if ($item === false) {
-                return $response->withStatus(StatusCode::HTTP_NOT_FOUND)->withJson(['error' => 'item not found']);
-            }
-
-            if ($item['status'] !== self::ITEM_STATUS_ON_SALE) {
-                return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => 'item is not for sale']);
-            }
-
-            if ($item['seller_id'] === $buyer['id']) {
-                return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => '自分の商品は買えません']);
-            }
-
             $this->dbh->beginTransaction();
 
-            $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `id` = ? FOR UPDATE');
+            $sth = $this->dbh->prepare('SELECT * FROM `items` WHERE `id` = ? FOR UPDATE NOWAIT');
             $r = $sth->execute([$payload->item_id]);
             if ($r === false) {
-                throw new \PDOException($sth->errorInfo());
+                return $response->withStatus(StatusCode::HTTP_FORBIDDEN)->withJson(['error' => 'item is not for sale']);
             }
             $item = $sth->fetch(PDO::FETCH_ASSOC);
             if ($item === false) {
